@@ -1,44 +1,41 @@
-#pragma once
+//
+//
+//
 
-#include "UntrustedStorageInterface.h"
+#ifndef PORAM_ORAMREADPATHEVICTION_H
+#define PORAM_ORAMREADPATHEVICTION_H
+#include "OramInterface.h"
 #include "RandForOramInterface.h"
-#include "Bucket.h"
-#include "Block.h"
-#include <vector>
+#include "UntrustedStorageInterface.h"
+#include <cmath>
 
-enum class Operation { READ, WRITE };
-
-class OramReadPathEviction {
-private:
+class OramReadPathEviction : public OramInterface {
+public:
     UntrustedStorageInterface* storage;
     RandForOramInterface* rand_gen;
 
     int bucket_size;
-    int num_blocks;
     int num_levels;
-    int num_buckets;
     int num_leaves;
+    int num_blocks;
+    int num_buckets;
 
-    std::vector<int> position_map; 
-    std::vector<Block> stash;
+    int *position_map; //array
+    vector<Block> stash;
 
-public:
-    // Constructor
-    OramReadPathEviction(UntrustedStorageInterface* storage, RandForOramInterface* rand_gen, 
-                         int bucket_size, int num_blocks);
+    OramReadPathEviction(UntrustedStorageInterface* storage,
+            RandForOramInterface* rand_gen, int bucket_size, int num_blocks);
+    int* access(Operation op, int blockIndex, int newdata[]);
+    int P(int leaf, int level);
+    int* getPositionMap();
+    vector<Block> getStash();
+    int getStashSize();
+    int getNumLeaves();
+    int getNumLevels();
+    int getNumBlocks();
+    int getNumBuckets();
 
-    // Access a block (READ/WRITE) and return data read (if applicable)
-    std::vector<int> access(Operation op, int blockIndex, std::vector<int> newdata = {});
-
-    // Deterministic function to compute the index of a bucket at a given level
-    int P(int leaf, int level) const;
-
-    // Getter functions
-    std::vector<int> getPositionMap() const;
-    std::vector<Block> getStash() const;
-    int getStashSize() const;
-    int getNumLeaves() const;
-    int getNumLevels() const;
-    int getNumBlocks() const;
-    int getNumBuckets() const;
 };
+
+
+#endif 
