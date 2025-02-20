@@ -1,4 +1,7 @@
-## This code is the intellectual property of Jasleen1 [https://github.com/obliviousram/PathORAM]
+/*
+\\ This code is the intellectual property of Jasleen1 [https://github.com/obliviousram/PathORAM]
+\\ (check to add a license file or some shareable license)
+*/
 
 #include "ServerStorage.h"
 #include <iostream>
