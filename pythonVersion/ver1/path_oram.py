@@ -26,10 +26,10 @@ tree = [0] * treeSize
 for i in range(1, N + 1):
     tree[i] = i
 random.shuffle(tree)
-#print(tree)
+print(tree)
 
 def readLeaf(branch):
-    return int(int(math.pow(2, L)) + int(branch) - 1);
+    return int(int(math.pow(2, L)) + int(branch) - 1)
 
 def getParent(node):
     return int(math.floor((node - 1) / 2.0))
