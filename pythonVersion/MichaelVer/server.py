@@ -5,9 +5,7 @@ class Server():
         self.tree = None
         self.bucket_size = None
     
-    def makeTree(self, bucketsize):
+    def makeTree(self, bucketsize, height):
         new_tree = Tree(bucketsize)
-        height = 
-        new_tree.createTree(height)
-        self.tree = 
+        self.tree = new_tree.createTree(height)
 
