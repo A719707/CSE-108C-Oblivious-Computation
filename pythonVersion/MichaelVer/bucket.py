@@ -17,8 +17,6 @@ class Bucket:
                 #break block
             i+=1
         
-
-
         #do we need to search through every block for obliviousness?
         if return_block == None:
             return 0
@@ -34,11 +32,11 @@ class Bucket:
 
         return
     
-    def read_bucket(self, searchkey):
+    def readBucket(self, searchkey):
         list_of_blocks = self.bucket
         for block in list_of_blocks:
             if block.key == searchkey:
                 return block
         
-        return False
+        return "Not here"
             

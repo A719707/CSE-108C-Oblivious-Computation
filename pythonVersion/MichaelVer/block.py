@@ -9,6 +9,12 @@ class Block:
     def getData(self):
         return self.data
     
+    def updateKey(self, newKey):
+        self.key= newKey
+    
+    def updateData(self, newData):
+        self.data = newData
+    
     def printBlock(self):
         print("key: " + str(self.getKey()))
         print("Data: " + str(self.getData()))

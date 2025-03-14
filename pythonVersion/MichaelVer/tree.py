@@ -61,7 +61,7 @@ class Tree:
         return root
 
     # Special Functions --------------------------------------------------------------------------------------
-    def getBucket(self, x, l):
+    def getNode(self, x, l):
         path = self.getPath(x)
         for node in path:
             if node.num == l:
@@ -106,7 +106,7 @@ class Tree:
                 
         return None
 
-    # printing --------------------------------------------------------------------------------------------
+    # printing for testing purposes --------------------------------------------------------------------------------------------
 
     def inorder(self, root, row, col, height, ans):
         if not root:

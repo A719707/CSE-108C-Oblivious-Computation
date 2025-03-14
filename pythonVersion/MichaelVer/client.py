@@ -3,6 +3,8 @@ import server
 
 class Client():
     def __init__(self, server_height):
+        bucketSize = 4
+
         temp_dict = {}
         num_leaves  = 2**(server_height)
         for i in range(num_leaves):
@@ -13,10 +15,12 @@ class Client():
         self.stash = []
         self.server_height = server_height
         self.max_leaves = num_leaves
+        self.server = server(server_height, bucketSize)
     
     def _updatePositionMap(self, a):
         new_path = random.randint(0, self.max_leaves - 1)
         self.position_map[a] = new_path
+        return new_path
 
     def _getPosition(self, a):
         if a in self.position_map:  
@@ -24,10 +28,29 @@ class Client():
         return False
 
     def access(self, op, a, data):
-        path_a = self._getPosition(a)
-        self._updatePositionMap(path_a)
+        path_a_num = self._getPosition(a)
+        self._updatePositionMap(path_a_num)
 
         for height in range(self.server_height):
-            bucket = 
-            self.stash.append()
+            bucket = self.server.getBucket(path_a_num, height)
+            self.stash.append(bucket)
+
+        data = None
+        for bucket in self.stash:
+            block = bucket.readBucket(a)
+            if block != "Not here":
+                data = block.getData()
+        
+        if op == "w": 
+            new_stash = []
+            new_path_num = self._updatePositionMap(a)
+            new_path = self.server.findPath
+
+            self.stash = 
+            
+
+        
+
+        
+
 
