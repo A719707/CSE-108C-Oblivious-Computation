@@ -1,13 +1,29 @@
-//
-//
-//
-
 #include "OramReadPathEviction.h"
 #include <iostream>
 #include <string>
 #include <sstream>
 #include <cmath>
+#include <vector> // Add this include for std::vector
 
+uint32_t getBitReversedIndex(uint32_t index, uint32_t bitWidth) {
+    uint32_t reversed = 0;
+    for (uint32_t i = 0; i < bitWidth; i++) {
+        if (index & (1 << i))
+            reversed |= (1 << (bitWidth - 1 - i));
+    }
+    return reversed;
+}
+
+void evictPath(uint32_t currentEvictionIndex) {
+    uint32_t bitWidth = log2(NUM_LEAVES);
+    uint32_t reversedIndex = getBitReversedIndex(currentEvictionIndex, bitWidth);
+    
+    std::vector<Block> path = fetchPath(reversedIndex);
+    processEviction(path);
+    storeEvictedBlocks(path);
+}
+
+// Existing code continues...
 OramReadPathEviction::OramReadPathEviction(UntrustedStorageInterface* storage, RandForOramInterface* rand_gen,
                                            int bucket_size, int num_blocks) {
     this->storage = storage;
@@ -18,7 +34,7 @@ OramReadPathEviction::OramReadPathEviction(UntrustedStorageInterface* storage, R
     this->num_buckets = pow(2, num_levels)-1;
     if (this->num_buckets*this->bucket_size < this->num_blocks) //deal with precision loss
     {
-        throw new runtime_error("Not enough space for the acutal number of blocks.");
+        throw new runtime_error("Not enough space for the actual number of blocks.");
     }
     this->num_leaves = pow(2, num_levels-1);
     Bucket::resetState();
