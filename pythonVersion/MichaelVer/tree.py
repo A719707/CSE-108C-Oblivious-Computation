@@ -1,23 +1,16 @@
 from bucket import Bucket
-
-class Node: 
-    def __init__(self, num, bucketsize):
-        self.num = num
-        self.left = None
-        self.right = None
-        self.bucket = Bucket(bucketsize)
-
-        self.path_num = -1
+from node import Node
 
 class Tree:
     def __init__(self, height = None, bucketsize = 4):
         self.root = None
         self.bucketsize = bucketsize
         self.height = height
+        self.maxLeaves = 2 ** height
 
-        if height != None:
-            if height >= 0:
-                self.createTree(height)
+        # if height != None:
+        #     if height >= 0:
+        #         self.createTree(height)
     
     #Accessors ----------------------------------------------------------------------------
     def getBucketsize(self):
@@ -25,58 +18,75 @@ class Tree:
 
     def getHeight(self):
         return self.height
+    
+    def setRoot(self, root):
+        self.root = root
 
     #Initializers -------------------------------------------------------------------------
-    def createTree(self, depth):
-        if depth == 0:
-            return Node(0, self.getBucketsize())
-        queue = []
-        self.height = depth
-        i = 0
-        leaf_num = 0
-        self.root = Node(i, self.getBucketsize())
-        root = self.root
+    # def createTree(self, depth):
+    #     if depth == 0:
+    #         return Node(0, self.getBucketsize())
+    #     queue = []
+    #     self.height = depth
+    #     i = 0
+    #     leaf_num = 0
+    #     self.root = Node(i, self.getBucketsize())
+    #     root = self.root
 
-        queue.append(root)
-        while len(queue) > 0:
-            size = len(queue)
-            i += 1
-            if i > depth:
-                break
-            else:
-                for j in range(size):
-                    node = queue.pop(0)
-                    node.left = Node(i, self.getBucketsize())
-                    node.right = Node(i, self.getBucketsize())
+    #     queue.append(root)
+    #     while len(queue) > 0:
+    #         size = len(queue)
+    #         i += 1
+    #         if i > depth:
+    #             break
+    #         else:
+    #             for j in range(size):
+    #                 node = queue.pop(0)
+    #                 node.left = Node(i, self.getBucketsize())
+    #                 node.right = Node(i, self.getBucketsize())
 
-                    if i == depth:
-                        node.left.path_num = leaf_num
-                        leaf_num += 1
+    #                 if i == depth:
+    #                     node.left.path_num = leaf_num
+    #                     leaf_num += 1
 
-                        node.right.path_num = leaf_num
-                        leaf_num += 1
+    #                     node.right.path_num = leaf_num
+    #                     leaf_num += 1
 
-                    queue.append(node.left)
-                    queue.append(node.right)
-        return root
+    #                 queue.append(node.left)
+    #                 queue.append(node.right)
+    #     return root
 
     # Special Functions --------------------------------------------------------------------------------------
     def getNode(self, x, l):
+        if x >= self.maxLeaves - 1:
+            raise Exception("Error tree.getNode(): path_num >= self.maxLeaves")
+
+        if l > self.height:
+            raise Exception("Error tree.getNode(): l > height")
         path = self.getPath(x)
         for node in path:
             if node.num == l:
-                print(node.num, end = "")
-                print(node.path_num)
-                return node.bucket
+                testmsg = f"[level: {node.num}| path_num: {x}]"
+                print(testmsg)          #testmsg--------------------------------------
+                return node
 
     def getPath(self, path_num):
-        path = self.dfs(self.root, path_num)
+        if path_num >= self.maxLeaves:
+            raise Exception("Error tree.getPath(): path_num >= self.maxLeaves")
+        path = self.pathRec(self.root, path_num)
+
+        # print(f"start path: {path_num}------------------------")
         # for node in path:
-        #     print(node.num, end = "")
-        #     print(node.path_num)
+        #     printmsg = f"[Node num: {node.num} | path_num: {node.path_num}]"
+        #     print(printmsg)
+        # print(f"end of path {path_num}------------------------")
+         
         return path
     
-    def dfs(self, current_node, path_num, path = None):
+    def pathRec(self, current_node, path_num, path = None):
+        if current_node == None:
+            return None
+        
         num1 = current_node.path_num
         num2 = path_num
 
@@ -87,20 +97,18 @@ class Tree:
         if path == None:
             path = []
 
-        path.append(current_node)
+        path.append(current_node.copy())
+
         if num1 == num2:
             return path
-        
-        if current_node.left == None:
-            return None
 
         if (current_node.left not in path):
-            result = self.dfs(current_node.left, path_num, path.copy())
+            result = self.pathRec(current_node.left, path_num, path.copy())
             if result:
                 return result
         
         if current_node.right not in path:
-            result = self.dfs(current_node.right, path_num, path.copy())
+            result = self.pathRec(current_node.right, path_num, path.copy())
             if result:
                 return result
                 

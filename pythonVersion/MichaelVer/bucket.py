@@ -1,28 +1,15 @@
-from block import Block
 
 class Bucket:
-    def __init__(self, bucketsize):
-        self.bucket = [Block() for i in range(bucketsize)]
+    def __init__(self, bucketsize, listOfBlocks):
+        self.bucket = listOfBlocks
+        self.bucketsize = bucketsize
+        self.numrRealNodes = 0
     
-    '''
-    input: int key
-    '''
-    def pop(self, key):
-        return_block = None
-        i = 0
-        for block_in_bucket in self.bucket:
-            if key == block_in_bucket.getKey():
-                return_block = block_in_bucket
-                self.bucket[i] = Block()
-                #break block
-            i+=1
-        
-        #do we need to search through every block for obliviousness?
-        if return_block == None:
-            return 0
-        
-        else:
-            return return_block
+    def replaceBucket(self, newBucket):
+        self.bucket = newBucket
+    
+    def getListBlocks(self):
+        return self.bucket
 
     def printBucket(self):
         print("------------------------------------------ new Bucket")
@@ -32,11 +19,10 @@ class Bucket:
 
         return
     
-    def readBucket(self, searchkey):
-        list_of_blocks = self.bucket
-        for block in list_of_blocks:
-            if block.key == searchkey:
-                return block
-        
-        return "Not here"
+    def copy(self):
+        newBucket = Bucket(self.bucketsize)
+        for i in range(len(self.bucket)):
+            newBucket.put(self.bucket[i])
+
+        return newBucket
             
