@@ -1,7 +1,3 @@
-//
-//
-//
-
 #include "OramDeterministic.h"
 #include <iostream>
 #include <string>
@@ -30,16 +26,16 @@ OramDeterministic::OramDeterministic(UntrustedStorageInterface* storage, RandFor
     Bucket::setMaxSize(bucket_size);
     this->rand_gen->setBound(num_leaves);
     this->storage->setCapacity(num_buckets);
-    this->position_map = new int[this->num_blocks];
+    this->position_map = new vector<int>[this->num_blocks];  // Array of vectors for multiple sub-ORAMs
     this->stash = vector<Block>();
     for (int i = 0; i < this->num_blocks; i++){
-        position_map[i] = rand_gen->getRandomLeaf();
+        for (int j = 0; j < this->num_levels; j++) {
+            position_map[i].push_back(rand_gen->getRandomLeaf());
+        }
     }
-
 
     // Initialize all blocks in all buckets as empty.
     for(int i = 0; i < num_buckets; i++){
-
         Bucket init_bkt = Bucket();
         for(int j = 0; j < bucket_size; j++){
             init_bkt.addBlock(Block());
@@ -50,11 +46,13 @@ OramDeterministic::OramDeterministic(UntrustedStorageInterface* storage, RandFor
 
 int* OramDeterministic::access(Operation op, int blockIndex, int *newdata) {
     int *data = new int[Block::BLOCK_SIZE];
-    int oldLeaf = position_map[blockIndex];
-    position_map[blockIndex] = rand_gen->getRandomLeaf();
+    vector<int> oldLeaves = position_map[blockIndex];
+    for (int j = 0; j < num_levels; j++) {
+        position_map[blockIndex][j] = rand_gen->getRandomLeaf();
+    }
     Block *targetBlock = NULL;
     for (int i = 0; i < num_levels; i++) {
-        vector<Block> blocks = storage->ReadBucket(P(oldLeaf, i)).getBlocks();
+        vector<Block> blocks = storage->ReadBucket(P(oldLeaves[i], i)).getBlocks();
         Bucket write_back = Bucket();
         for (Block b: blocks) {
             if (b.index != blockIndex) {
@@ -62,24 +60,20 @@ int* OramDeterministic::access(Operation op, int blockIndex, int *newdata) {
             } else {
                 targetBlock = new Block(b);
                 write_back.addBlock(Block());
-
             }
         }
-        storage->WriteBucket(P(oldLeaf, i), &write_back);
+        storage->WriteBucket(P(oldLeaves[i], i), &write_back);
     }
 
-
     if (op == Operation::WRITE) {
-
         if (targetBlock == NULL) {
-            Block newBlock = Block(position_map[blockIndex], blockIndex, newdata);
+            Block newBlock = Block(blockIndex, newdata, position_map[blockIndex]);
             stash.push_back(newBlock);
         } else {
             for (int i = 0; i < Block::BLOCK_SIZE; i++) {
                 targetBlock->data[i] = newdata[i];
             }
             stash.push_back(Block(*targetBlock));
-
         }
     } else { 
         if (targetBlock == NULL) {
@@ -98,11 +92,9 @@ int* OramDeterministic::access(Operation op, int blockIndex, int *newdata) {
     as determined by ReverseBits
     */
     for (int repeat = 0; repeat < 2; repeat++) {
-
         int g = ReverseBits(this->G, num_levels - 1);
         this->G = this->G + 1;
         for (int l = 0; l < num_levels; l++) {
-            
             vector<Block> blocks = vector<Block>();
             /*
             Read blocks on current level in the path and write to stash
@@ -131,12 +123,11 @@ int* OramDeterministic::access(Operation op, int blockIndex, int *newdata) {
             int counter = 0;
 
             for (Block b_instash : stash) {
-
                 if (counter >= bucket_size) {
                     break;
                 }
                 Block be_evicted = Block(b_instash);
-                if (Pxl == P(position_map[be_evicted.index], l)) {
+                if (Pxl == P(position_map[be_evicted.index][l], l)) {
                     bucket.addBlock(be_evicted);
                     bid_evicted.push_back(be_evicted.index);
                     counter++;
@@ -162,15 +153,11 @@ int* OramDeterministic::access(Operation op, int blockIndex, int *newdata) {
                 counter++;
             }
             storage->WriteBucket(Pxl, bucket);
-
         }
     }
 
     return data;
 }
-
-
-
 
 int OramDeterministic::ReverseBits(int g, int bits_length) {
     /*
@@ -191,7 +178,6 @@ int OramDeterministic::ReverseBits(int g, int bits_length) {
     return reverse;
 }
 
-
 int OramDeterministic::P(int leaf, int level) {
     /*
     * This function should be deterministic. 
@@ -201,15 +187,13 @@ int OramDeterministic::P(int leaf, int level) {
     return (1<<level) - 1 + (leaf >> (this->num_levels - level - 1));
 }
 
-
 /*
 The below functions are to access various parameters, as described by their names.
 INPUT: No input
 OUTPUT: Value of internal variables given in the name.
 */
 
-
-int *OramDeterministic::getPositionMap() {
+vector<int>* OramDeterministic::getPositionMap() {
     return this->position_map;
 }
 
@@ -221,28 +205,23 @@ int OramDeterministic::globalG() {
     return this->G;
 }
 
-    
 int OramDeterministic::getStashSize() {
     return (this->stash).size();
 }
-    
+
 int OramDeterministic::getNumLeaves() {
     return this->num_leaves;
-
 }
 
 int OramDeterministic::getNumLevels() {
     return this->num_levels;
-
 }
 
 int OramDeterministic::getNumBlocks() {
     return this->num_blocks;
-
 }
 
 int OramDeterministic::getNumBuckets() {
     return this->num_buckets;
-
 }
 
