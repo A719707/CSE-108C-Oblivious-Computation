@@ -1,45 +1,63 @@
 
-#include "Block.h"
+#ifndef PORAM_BLOCK_H
+#define PORAM_BLOCK_H
+
+#include <algorithm>
 #include <iostream>
-#include <string>
-#include <sstream>
+#include <vector>
 
 using namespace std;
 
-// Default constructor for a dummy block
-Block::Block() {
-    this->index = -1;
-    for (int i = 0; i < MAX_ORAMS; i++) {
-        this->leaf_ids[i] = -1; // Initialize all ORAM leaf positions as invalid
-    }
-}
+class Block {
+public:
+    static const int BLOCK_SIZE = 2;  // Block data size
 
-// Constructor with data and multiple ORAM leaf positions
-Block::Block(int index, int data[], int leaf_ids[]) : index(index) {
-    for (int i = 0; i < BLOCK_SIZE; i++) {
-        this->data[i] = data[i];
-    }
-    for (int i = 0; i < MAX_ORAMS; i++) {
-        this->leaf_ids[i] = leaf_ids[i]; // Store leaf positions for all sub-ORAMs
-    }
-}
-
-// Destructor
-Block::~Block() {}
-
-// Print block information
-void Block::printBlock() {
-    string data_holder = "";
-    for (int i = 0; i < BLOCK_SIZE; i++) {
-        data_holder += to_string(this->data[i]) + " ";
+    // Constructors
+    Block() : index(-1) {
+        fill(data, data + BLOCK_SIZE, 0);
     }
 
-    cout << "index: " << to_string(this->index) << " leaf_ids: ";
-    
-    // Print leaf positions for all sub-ORAMs
-    for (int i = 0; i < MAX_ORAMS; i++) {
-        cout << leaf_ids[i] << " ";
+    Block(int index, const int data[], const vector<int>& leaf_ids) 
+        : index(index), leaf_ids(leaf_ids) {
+        copy(data, data + BLOCK_SIZE, this->data);
     }
 
-    cout << " data: " << data_holder << endl;
-}
+    // Getters and Setters
+    int getIndex() const { return index; }
+    void setIndex(int idx) { index = idx; }
+
+    const int* getData() const { return data; }
+    void setData(const int newData[]) {
+        copy(newData, newData + BLOCK_SIZE, data);
+    }
+
+    const vector<int>& getLeafIds() const { return leaf_ids; }
+    void setLeafIds(const vector<int>& newLeafIds) {
+        leaf_ids = newLeafIds;
+    }
+
+    // Print function
+    void printBlock() const {
+        cout << "Block Index: " << index << endl;
+        cout << "Data: ";
+        for (int i = 0; i < BLOCK_SIZE; ++i) {
+            cout << data[i] << " ";
+        }
+        cout << endl;
+        cout << "Leaf IDs: ";
+        for (int id : leaf_ids) {
+            cout << id << " ";
+        }
+        cout << endl;
+    }
+
+    // Destructor
+    virtual ~Block() {}
+
+private:
+    int index;               // Logical block index
+    int data[BLOCK_SIZE];    // Block data
+    vector<int> leaf_ids;    // Positions in all sub-ORAMs
+};
+
+#endif // PORAM_BLOCK_H
