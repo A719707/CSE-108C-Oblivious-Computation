@@ -180,7 +180,7 @@ while(1):
 
     if op == "w":
         userNewData = None
-        while(userNewData != None):
+        while(userNewData == None):
             userNewData = int(input(f"New int Data for {userBlock}: "))
         localClient.access(op, userBlock, userNewData)
     
