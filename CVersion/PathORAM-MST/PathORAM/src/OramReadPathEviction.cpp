@@ -5,6 +5,9 @@
 #include <sstream>
 #include <cmath>
 #include <vector>
+#include <algorithm>
+
+using namespace std;
 
 // Utility function to get bit-reversed index
 uint32_t getBitReversedIndex(uint32_t index, uint32_t bitWidth) {
@@ -16,6 +19,7 @@ uint32_t getBitReversedIndex(uint32_t index, uint32_t bitWidth) {
     return reversed;
 }
 
+// Constructor
 OramReadPathEviction::OramReadPathEviction(UntrustedStorageInterface* storage, RandForOramInterface* rand_gen,
                                            int bucket_size, int num_blocks) {
     this->storage = storage;
@@ -24,18 +28,18 @@ OramReadPathEviction::OramReadPathEviction(UntrustedStorageInterface* storage, R
     this->num_blocks = num_blocks;
     this->num_levels = ceil(log2(num_blocks)) + 1;
     this->num_buckets = pow(2, num_levels) - 1;
-    
+
     if (this->num_buckets * this->bucket_size < this->num_blocks) {
-        throw std::runtime_error("Not enough space for the actual number of blocks.");
+        throw runtime_error("Not enough space for the actual number of blocks.");
     }
-    
+
     this->num_leaves = pow(2, num_levels - 1);
     Bucket::resetState();
     Bucket::setMaxSize(bucket_size);
     this->rand_gen->setBound(num_leaves);
     this->storage->setCapacity(num_buckets);
     this->position_map = new int[this->num_blocks];
-    this->stash = std::vector<Block>();
+    this->stash = vector<Block>();
 
     // Initialize position map with bit-reversed leaf positions
     uint32_t bitWidth = log2(num_leaves);
@@ -64,10 +68,10 @@ int* OramReadPathEviction::access(Operation op, int blockIndex, int *newdata) {
     int newLeaf = position_map[blockIndex];
 
     // Read path (bit-reversed ordering)
-    std::vector<Block> pathBlocks;
+    vector<Block> pathBlocks;
     for (int i = 0; i < num_levels; i++) {
         int pathIndex = getBitReversedIndex(P(oldLeaf, i), bitWidth);
-        std::vector<Block> blocks = storage->ReadBucket(pathIndex).getBlocks();
+        vector<Block> blocks = storage->ReadBucket(pathIndex).getBlocks();
         for (Block& b : blocks) {
             if (b.index != -1) {
                 stash.push_back(b);
@@ -109,7 +113,7 @@ int* OramReadPathEviction::access(Operation op, int blockIndex, int *newdata) {
 
     // **Batch Eviction: Write multiple paths at once**
     for (int l = num_levels - 1; l >= 0; l--) {
-        std::vector<int> evictedBlockIDs;
+        vector<int> evictedBlockIDs;
         Bucket bucket;
         int pathIndex = getBitReversedIndex(P(oldLeaf, l), bitWidth);
         int counter = 0;
@@ -125,8 +129,8 @@ int* OramReadPathEviction::access(Operation op, int blockIndex, int *newdata) {
 
         // Remove evicted blocks from stash
         for (int id : evictedBlockIDs) {
-            stash.erase(std::remove_if(stash.begin(), stash.end(),
-                                       [id](Block& b) { return b.index == id; }),
+            stash.erase(remove_if(stash.begin(), stash.end(),
+                                 [id](Block& b) { return b.index == id; }),
                         stash.end());
         }
 
@@ -141,4 +145,9 @@ int* OramReadPathEviction::access(Operation op, int blockIndex, int *newdata) {
     }
 
     return data;
+}
+
+// Helper function to compute bucket index for a given leaf and level
+int OramReadPathEviction::P(int leaf, int level) {
+    return (1 << level) - 1 + (leaf >> (this->num_levels - level - 1));
 }
