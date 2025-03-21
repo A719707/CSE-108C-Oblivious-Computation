@@ -10,15 +10,15 @@ class Client:
     def __init__(self, numBlocks, bucketSize):
         self.numBlocks = numBlocks
         self.bucketSize = bucketSize
-        
-        self.positionMap = {}
-        for i in range(numBlocks):
-            random_path = random.randint(0, numBlocks - 1)
-            self.positionMap[i] = (random_path, 0)
 
         self.stash = []
 
         self.height =  int(math.log2(numBlocks)) + 1
+
+        self.positionMap = {}
+        for i in range(2 ** (height) - 1):
+            random_path = random.randint(0, 2 ** (height) - 1)
+            self.positionMap[i] = (random_path, 0)
 
         self.key = Fernet.generate_key()
         self.fernet = Fernet(self.key)
