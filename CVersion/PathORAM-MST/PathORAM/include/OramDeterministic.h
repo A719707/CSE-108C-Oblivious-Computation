@@ -1,43 +1,52 @@
-//
-//
-//
+#ifndef ORAMDETERMINISTIC_H
+#define ORAMDETERMINISTIC_H
 
-#ifndef PORAM_ORAMDETERMINISTIC_H
-#define PORAM_ORAMDETERMINISTIC_H
-#include "OramInterface.h"
-#include "OramReadPathEviction.h"
+#include "UntrustedStorageInterface.h"
+#include "RandForOramInterface.h"
+#include "Bucket.h"
+#include "Block.h"
+#include <vector>
+#include <stdexcept>
+#include <cmath>
 
+using namespace std;
 
-class OramDeterministic : public OramInterface {
+class OramDeterministic {
 public:
-    UntrustedStorageInterface* storage;
-    RandForOramInterface* rand_gen;
-    int G;
-    int bucket_size;
-    int num_levels;
-    int num_leaves;
-    int num_blocks;
-    int num_buckets;
-    int *position_map; //array
-    vector<Block> stash;
+    enum Operation { READ, WRITE };
 
-    OramDeterministic(UntrustedStorageInterface *storage,
-                      RandForOramInterface *rand_gen, int bucket_size, int num_blocks);
-    int* access(Operation op, int block_id, int newdata[]);
-    int* getPositionMap();
+    // Constructor
+    OramDeterministic(UntrustedStorageInterface* storage, RandForOramInterface* rand_gen,
+                      int bucket_size, int num_blocks);
+
+    // Access function
+    int* access(Operation op, int blockIndex, int *newdata);
+
+    // Helper functions
+    int ReverseBits(int g, int bits_length);
+    int P(int leaf, int level);
+
+    // Getters
+    vector<int>* getPositionMap();
     vector<Block> getStash();
     int globalG();
-    int ReverseBits(int G, int bits_length);
-    static string ConvertToBase2(int num);
-    int P(int leaf, int level);
     int getStashSize();
     int getNumLeaves();
     int getNumLevels();
     int getNumBlocks();
     int getNumBuckets();
 
+private:
+    int G;  // Global counter for eviction
+    UntrustedStorageInterface* storage;
+    RandForOramInterface* rand_gen;
+    int bucket_size;
+    int num_blocks;
+    int num_levels;
+    int num_buckets;
+    int num_leaves;
+    vector<int>* position_map;  // Array of vectors for multiple sub-ORAMs
+    vector<Block> stash;
 };
 
-
-
-#endif //PORAM_ORAMDETERMINISTIC_H
+#endif // ORAMDETERMINISTIC_H
