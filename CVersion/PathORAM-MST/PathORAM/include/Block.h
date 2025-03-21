@@ -3,27 +3,38 @@
 
 #include <algorithm>
 #include <iostream>
+#include <vector>
 
 using namespace std;
-
-#define MAX_ORAMS 10 // Maximum number of sub-ORAMs, adjust based on rORAM depth
 
 class Block {
 public:
     static const int BLOCK_SIZE = 2;  // Block data size
-    int index;                        // Logical block index
-    int data[BLOCK_SIZE];             // Block data
-    int leaf_ids[MAX_ORAMS];          // Positions in all sub-ORAMs
 
     // Constructors
-    Block();  
-    Block(int index, int data[], int leaf_ids[]);
+    Block();  // Default constructor
+    Block(int index, const int data[], const vector<int>& leaf_ids);  // Parameterized constructor
+
+    // Getters and Setters
+    int getIndex() const;
+    void setIndex(int idx);
+
+    const int* getData() const;
+    void setData(const int newData[]);
+
+    const vector<int>& getLeafIds() const;
+    void setLeafIds(const vector<int>& newLeafIds);
 
     // Print function
-    void printBlock();
+    void printBlock() const;
 
     // Destructor
     virtual ~Block();
+
+private:
+    int index;               // Logical block index
+    int data[BLOCK_SIZE];    // Block data
+    vector<int> leaf_ids;    // Positions in all sub-ORAMs
 };
 
 #endif // PORAM_BLOCK_H
