@@ -13,11 +13,11 @@ class Client:
 
         self.stash = []
 
-        self.height =  int(math.log2(numBlocks)) + 1
+        self.height = int(math.log2(numBlocks)) + 1
 
         self.positionMap = {}
         for i in range(2 ** (height) - 1):
-            random_path = random.randint(0, 2 ** (height) - 1)
+            random_path = random.randint(0, 2 ** (self.height) - 1)
             self.positionMap[i] = (random_path, 0)
 
         self.key = Fernet.generate_key()
@@ -39,7 +39,7 @@ class Client:
     def access(self, op, a, newdata = None):
         a_path_num = self.positionMap[a][0]
         firstTime = self.positionMap[a][1]
-        randompath = random.randint(0, self.numBlocks - 1)
+        randompath = random.randint(0, 2 ** (self.height) - 1)
         self.positionMap[a] = (randompath, 1)
         
         for i in range(self.height):
@@ -69,14 +69,14 @@ class Client:
                     if self.server.getBucket(b_block_path, i) == self.server.getBucket(a_path_num, i):
                         temp_stash.append(block)
             
-            while (len(temp_stash) > 4):
+            while (len(temp_stash) > self.bucketSize):
                 temp_stash.pop()
             
             for block in temp_stash:
                 if block in self.stash:
                     self.stash.remove(block)
                 
-            while len(temp_stash) < 4:
+            while len(temp_stash) < self.bucketSize:
                 temp_stash.append(self.createDummyBlock())
 
             newEncryptedBucket = self.encrypt(temp_stash)
@@ -128,7 +128,7 @@ class Client:
         if server == None:
             return
         
-        totalNodes = 2 ** (height + 1) - 1
+        totalNodes = 2 ** (self.height + 1) - 1
         for i in range(totalNodes):
             dummyBucket = self.createBucket()
             self.server.insert(dummyBucket)
