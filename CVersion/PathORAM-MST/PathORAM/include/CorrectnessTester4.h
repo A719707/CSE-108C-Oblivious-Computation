@@ -1,18 +1,22 @@
 
+#ifndef CORRECTNESSTESTER4_H
+#define CORRECTNESSTESTER4_H
 
 #include "OramInterface.h"
-#include "OramReadPathEviction.h"
 #include "UntrustedStorageInterface.h"
-#include "ServerStorage.h"
-
-#include <vector>
-
+#include "RandForOramInterface.h"
+#include "Block.h"
+#include <iostream>
+#include <string>
+#include <cmath>
 
 class CorrectnessTester4 {
 public:
-
     CorrectnessTester4();
-    int* sampleData(int i);
-    void runCorrectnessTest();
+    void runCorrectnessTest(); // Runs the correctness test for ORAM
 
+private:
+    int* sampleData(int i); // Generates sample data for a block
 };
+
+#endif // CORRECTNESSTESTER4_H

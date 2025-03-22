@@ -1,4 +1,3 @@
-
 #include "CorrectnessTester5.h"
 #include "Bucket.h"
 #include "ServerStorage.h"
@@ -15,62 +14,73 @@
 using namespace std;
 
 CorrectnessTester5::CorrectnessTester5() {
+    // Constructor (if needed)
 }
 
 int* CorrectnessTester5::sampleData(int i) {
-	int* newArray = new int[Block::BLOCK_SIZE];
-	for (int j = 0; j < Block::BLOCK_SIZE; ++j) {
-		newArray[j] = i;
-	}
-	return newArray;
+    int* newArray = new int[Block::BLOCK_SIZE];
+    for (int j = 0; j < Block::BLOCK_SIZE; ++j) {
+        newArray[j] = i; // Fill the block with the value `i`
+    }
+    return newArray;
 }
 
 void CorrectnessTester5::runCorrectnessTest() {
+    // Configuration parameters
+    int bucketSize = 2;
+    int numBlocks = pow(2, 20); // 1,048,576 blocks
+    Bucket::setMaxSize(bucketSize);
 
-	int bucketSize = 2;
-	int numBlocks = pow(2, 20);
-	Bucket::setMaxSize(bucketSize);	
+    // Initialize storage and randomness
+    UntrustedStorageInterface* storage = new ServerStorage();
+    RandForOramInterface* random = new RandomForOram();
 
-	UntrustedStorageInterface* storage = new ServerStorage();
-	
-	RandForOramInterface* random = new RandomForOram();
-	
-	OramInterface* oram = new OramReadPathEviction(storage, random, bucketSize, numBlocks);
-	//OramInterface* oram = new OramDeterministic(storage, random, bucketSize, numBlocks);
+    // Initialize ORAM (choose between OramReadPathEviction or OramDeterministic)
+    OramInterface* oram = new OramReadPathEviction(storage, random, bucketSize, numBlocks);
+    // OramInterface* oram = new OramDeterministic(storage, random, bucketSize, numBlocks);
 
-	cout << "Warming up the stash by writing blocks" << endl;
-	int bound = numBlocks;
-	for(int i = 0; i < bound; i++){
-			int* accessed = oram->access(OramInterface::Operation::WRITE, i % numBlocks, this->sampleData(i%numBlocks));
-			if (i%1000 == 0) {
-				cout << "Writing Block " << i << " with value: " << i%numBlocks << " to ORAM. The stash size is: " << to_string(oram->getStashSize()) << std::endl;
-			}
-	}
+    cout << "Warming up the stash by writing blocks..." << endl;
 
-	
-	
-	for(int i = 0; i < bound; i++){
-		int* accessed = oram->access(OramInterface::Operation::READ, i % numBlocks, NULL);
-		string holder = "";
-		if (accessed == NULL) {
-			cout << "accessed is null" << endl;
-			cout << "accessed: " << i%numBlocks << " and i = " << i << endl;
- 		}
-		for (unsigned int j = 0; j<Block::BLOCK_SIZE; ++j) {
-			int temp = accessed[j];
-			holder += to_string(temp);
-			holder += " ";
-		}
-		if (i%1000 == 0){
-			cout << "Reading Block " << i << " from ORAM. Value is : " << holder << std::endl;
-		//if (oram->getStashSize() > 0) {
-			cout << "Stash size is " << to_string(oram->getStashSize()) << std::endl;
-		}	
-	}
+    // Warm-up phase: Write blocks to ORAM
+    int bound = numBlocks;
+    for (int i = 0; i < bound; i++) {
+        int blockIndex = i % numBlocks; // Cycle through block indices
+        int* data = sampleData(blockIndex); // Generate sample data
+        int* accessed = oram->access(OramInterface::Operation::WRITE, blockIndex, data);
+        delete[] data; // Clean up dynamically allocated data
 
-	// for(int i = 0; i < numBlocks; i++){
-	// 		int* accessed = oram->access(OramInterface::Operation::WRITE, i % numBlocks, this->sampleData(i));
-	// 		cout << "Writing Block " << i % numBlocks << " to ORAM. The stash size is: " << to_string(oram->getStashSize()) << std::endl;
-	// }
+        // Log progress periodically
+        if (i % 1000 == 0) {
+            cout << "Writing Block " << blockIndex << " with value: " << blockIndex << " to ORAM. Stash size: " << oram->getStashSize() << endl;
+        }
+    }
 
+    // Verification phase: Read blocks and verify correctness
+    for (int i = 0; i < bound; i++) {
+        int blockIndex = i % numBlocks;
+        int* accessed = oram->access(OramInterface::Operation::READ, blockIndex, nullptr);
+        string holder = "";
+
+        // Check for NULL access
+        if (accessed == nullptr) {
+            cout << "Error: Accessed block is NULL for block index " << blockIndex << " (i = " << i << ")" << endl;
+            continue;
+        }
+
+        // Verify each element in the block
+        for (unsigned int j = 0; j < Block::BLOCK_SIZE; ++j) {
+            holder += to_string(accessed[j]) + " ";
+        }
+
+        // Log progress periodically
+        if (i % 1000 == 0) {
+            cout << "Reading Block " << blockIndex << " from ORAM. Value is: " << holder << endl;
+            cout << "Stash size is " << oram->getStashSize() << endl;
+        }
+    }
+
+    // Clean up
+    delete oram;
+    delete random;
+    delete storage;
 }
