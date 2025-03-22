@@ -16,7 +16,7 @@ class Client:
         self.height = int(math.log2(numBlocks)) + 1
 
         self.positionMap = {}
-        for i in range(2 ** (height) - 1):
+        for i in range(2 ** (self.height) - 1):
             random_path = random.randint(0, 2 ** (self.height) - 1)
             self.positionMap[i] = (random_path, 0)
 
@@ -87,7 +87,6 @@ class Client:
     def readBucket(self, bucket):
         bucketCopy = bucket.copy()
         listOfBlocks = bucketCopy.getBucket()
-        returnbucket = []
         for block in listOfBlocks:
             encKey = block.getKey()
             encData = block.getData()
@@ -97,11 +96,8 @@ class Client:
 
             block.updateKey(decKey)
             block.updateData(decData)
-            # newBlock = Block(decKey, decData)
-
-            # returnbucket.append(newBlock)
         
-        return listOfBlocks #returnbucket 
+        return listOfBlocks
     
     # initialization ---------------------------------------------------------------
     def encryptBlock(self, block):
@@ -118,14 +114,14 @@ class Client:
     def encrypt(self, listofblocks):
         returnlist = []
         for block in listofblocks:
-            self.encryptBlock(block)
+            returnlist.append(self.encryptBlock(block))
 
         return Bucket(returnlist)   
     def connectServer(self, server):
         self.server = server
 
     def initializeTree(self):
-        if server == None:
+        if self.server == None:
             return
         
         totalNodes = 2 ** (self.height + 1) - 1
@@ -181,7 +177,10 @@ while(1):
     if op == "w":
         userNewData = None
         while(userNewData == None):
-            userNewData = int(input(f"New int Data for {userBlock}: "))
+            try:
+                userNewData = int(input(f"New int Data for {userBlock}: "))
+            except ValueError:
+                print("invalid Integer")
         localClient.access(op, userBlock, userNewData)
     
     if op == "r":
