@@ -4,7 +4,7 @@ to run PathORAM use the command
 
 python3 client.py
 
-At default the size of the bucket is 4, and the expected number of Blocks is size 10. You can change this on the client.py on line 155 and 156
+At default the size of the bucket is 4, and the expected number of Blocks is size 2**10. You can change this on the client.py on line 155 and 156
 
 ## files
 block.py - contains the block class and its functions
