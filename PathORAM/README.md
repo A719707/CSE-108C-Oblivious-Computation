@@ -22,3 +22,13 @@ client.py - the main part of PathORAM
 dictTree.py - the data structure used by the Server
 
 server.py - contains the tree and basic functions of the tree.
+
+pathORAMSim.py - tests whether the read and write operations have the same time complexity
+
+pathtester.py - is the unit test for pathORAM, makes sure the functions individually work
+
+prototype.py - was the an attempt on range ORAM in python
+
+range_oram.py - is another version of range oram implemented
+
+test_range_oram.py - is a tester for range_oram.py
