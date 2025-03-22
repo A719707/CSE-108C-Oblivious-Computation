@@ -51,7 +51,11 @@ class Client:
             for block in self.stash:
                 if self.isDummy(block):
                     block.updateKey(a)
-                    break
+                    if op == "w":
+                        block.updateData(newdata)
+                    else:
+                        block.updateData(data)
+            
         else:
             for block in self.stash:
                 if block.getKey() == a:
@@ -172,7 +176,12 @@ while(1):
 
     userBlock = -1
     while(userBlock < 0 or userBlock > numBlocks):
-        userBlock = int(input(f"Which block do you want to access (0 - {numBlocks}): "))
+        try:
+            userBlock = int(input(f"Which block do you want to access (0 - {numBlocks - 1}): "))
+            if (userBlock < 0 or userBlock > numBlocks):
+                print(f"Choose a block inside the range (0 - {numBlocks - 1})")
+        except ValueError:
+            print("Invalid Integer")
 
     if op == "w":
         userNewData = None
