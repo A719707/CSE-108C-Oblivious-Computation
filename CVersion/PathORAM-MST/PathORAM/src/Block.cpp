@@ -1,63 +1,48 @@
-
-#ifndef PORAM_BLOCK_H
-#define PORAM_BLOCK_H
-
-#include <algorithm>
+#include "Block.h"
 #include <iostream>
-#include <vector>
+#include <algorithm>
 
 using namespace std;
 
-class Block {
-public:
-    static const int BLOCK_SIZE = 2;  // Block data size
+// Default constructor
+Block::Block() : index(-1), leaf_id(-1), range_size(0) {
+    fill(data, data + BLOCK_SIZE, 0);
+}
 
-    // Constructors
-    Block() : index(-1) {
-        fill(data, data + BLOCK_SIZE, 0);
+// Backward-compatible constructor
+Block::Block(int leaf_id, int index, int data[]) 
+    : index(index), leaf_id(leaf_id), range_size(0) {
+    copy(data, data + BLOCK_SIZE, this->data);
+    leaf_ids.push_back(leaf_id); // Initialize leaf_ids with leaf_id
+}
+
+// New constructor for rORAM
+Block::Block(int index, const int data[], const vector<int>& leaf_ids, int range_size) 
+    : index(index), leaf_ids(leaf_ids), range_size(range_size) {
+    copy(data, data + BLOCK_SIZE, this->data);
+    if (!leaf_ids.empty()) {
+        leaf_id = leaf_ids[0]; // Initialize leaf_id for backward compatibility
     }
+}
 
-    Block(int index, const int data[], const vector<int>& leaf_ids) 
-        : index(index), leaf_ids(leaf_ids) {
-        copy(data, data + BLOCK_SIZE, this->data);
+// Print function
+void Block::printBlock() const {
+    cout << "Block Index: " << index << endl;
+    cout << "Data: ";
+    for (int i = 0; i < BLOCK_SIZE; ++i) {
+        cout << data[i] << " ";
     }
-
-    // Getters and Setters
-    int getIndex() const { return index; }
-    void setIndex(int idx) { index = idx; }
-
-    const int* getData() const { return data; }
-    void setData(const int newData[]) {
-        copy(newData, newData + BLOCK_SIZE, data);
+    cout << endl;
+    cout << "Leaf ID: " << leaf_id << endl; // Backward-compatible print
+    cout << "Leaf IDs: ";
+    for (int id : leaf_ids) {
+        cout << id << " ";
     }
+    cout << endl;
+    cout << "Range Size: " << range_size << endl;
+}
 
-    const vector<int>& getLeafIds() const { return leaf_ids; }
-    void setLeafIds(const vector<int>& newLeafIds) {
-        leaf_ids = newLeafIds;
-    }
-
-    // Print function
-    void printBlock() const {
-        cout << "Block Index: " << index << endl;
-        cout << "Data: ";
-        for (int i = 0; i < BLOCK_SIZE; ++i) {
-            cout << data[i] << " ";
-        }
-        cout << endl;
-        cout << "Leaf IDs: ";
-        for (int id : leaf_ids) {
-            cout << id << " ";
-        }
-        cout << endl;
-    }
-
-    // Destructor
-    virtual ~Block() {}
-
-private:
-    int index;               // Logical block index
-    int data[BLOCK_SIZE];    // Block data
-    vector<int> leaf_ids;    // Positions in all sub-ORAMs
-};
-
-#endif // PORAM_BLOCK_H
+// Destructor
+Block::~Block() {
+    // Destructor is trivial; no dynamic memory to clean up
+}
