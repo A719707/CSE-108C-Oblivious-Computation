@@ -1,4 +1,3 @@
-
 #include "OramReadPathEviction.h"
 #include <iostream>
 #include <string>
@@ -111,38 +110,8 @@ int* OramReadPathEviction::access(Operation op, int blockIndex, int *newdata) {
         }
     }
 
-    // **Batch Eviction: Write multiple paths at once**
-    for (int l = num_levels - 1; l >= 0; l--) {
-        vector<int> evictedBlockIDs;
-        Bucket bucket;
-        int pathIndex = getBitReversedIndex(P(oldLeaf, l), bitWidth);
-        int counter = 0;
-
-        for (Block& b : stash) {
-            int mappedPath = getBitReversedIndex(P(position_map[b.index], l), bitWidth);
-            if (counter < bucket_size && mappedPath == pathIndex) {
-                bucket.addBlock(b);
-                evictedBlockIDs.push_back(b.index);
-                counter++;
-            }
-        }
-
-        // Remove evicted blocks from stash
-        for (int id : evictedBlockIDs) {
-            stash.erase(remove_if(stash.begin(), stash.end(),
-                                 [id](Block& b) { return b.index == id; }),
-                        stash.end());
-        }
-
-        // Fill remaining slots with dummy blocks
-        while (counter < bucket_size) {
-            bucket.addBlock(Block());
-            counter++;
-        }
-
-        // Write evicted bucket back to storage
-        storage->WriteBucket(pathIndex, bucket);
-    }
+    // Perform batch eviction
+    batchEvict(batch_size);
 
     return data;
 }
@@ -150,4 +119,116 @@ int* OramReadPathEviction::access(Operation op, int blockIndex, int *newdata) {
 // Helper function to compute bucket index for a given leaf and level
 int OramReadPathEviction::P(int leaf, int level) {
     return (1 << level) - 1 + (leaf >> (this->num_levels - level - 1));
+}
+
+// ReadRange function for efficient range queries
+std::vector<Block> OramReadPathEviction::ReadRange(int start, int end) {
+    std::vector<Block> result;
+    int range_size = end - start;
+
+    // Determine the sub-ORAM index based on the range size
+    int sub_oram_index = std::ceil(std::log2(range_size));
+
+    // Fetch blocks from the appropriate sub-ORAM
+    for (int i = start; i < end; i++) {
+        int leaf_id = position_map[i];
+        int bitWidth = log2(num_leaves);
+        int reversedLeaf = getBitReversedIndex(leaf_id, bitWidth);
+
+        // Read the path for the block
+        for (int l = 0; l < num_levels; l++) {
+            int pathIndex = getBitReversedIndex(P(reversedLeaf, l), bitWidth);
+            Bucket bucket = storage->ReadBucket(pathIndex);
+            std::vector<Block> blocks = bucket.getBlocks();
+
+            // Add blocks in the range to the result
+            for (Block& block : blocks) {
+                if (block.getIndex() >= start && block.getIndex() < end) {
+                    result.push_back(block);
+                }
+            }
+        }
+    }
+
+    // Update the position map for the blocks in the range
+    for (int i = start; i < end; i++) {
+        position_map[i] = getBitReversedIndex(rand_gen->getRandomLeaf(), log2(num_leaves));
+    }
+
+    return result;
+}
+
+// Batch eviction function
+void OramReadPathEviction::batchEvict(int batch_size) {
+    // Collect blocks from the stash that need to be evicted
+    std::vector<Block> blocks_to_evict;
+    for (int i = 0; i < stash.size() && i < batch_size; i++) {
+        blocks_to_evict.push_back(stash[i]);
+    }
+
+    // Determine eviction paths using bit-reversed ordering
+    std::vector<int> eviction_paths;
+    for (int i = 0; i < batch_size; i++) {
+        int leaf_id = rand_gen->getRandomLeaf();
+        int bitWidth = log2(num_leaves);
+        int reversedLeaf = getBitReversedIndex(leaf_id, bitWidth);
+        eviction_paths.push_back(reversedLeaf);
+    }
+
+    // Perform evictions in batches
+    for (int path : eviction_paths) {
+        for (int l = num_levels - 1; l >= 0; l--) {
+            int pathIndex = getBitReversedIndex(P(path, l), bitWidth);
+            Bucket bucket;
+
+            // Add blocks to the bucket
+            for (Block& block : blocks_to_evict) {
+                if (bucket.getBlocks().size() < bucket_size) {
+                    bucket.addBlock(block);
+                }
+            }
+
+            // Fill remaining slots with dummy blocks
+            while (bucket.getBlocks().size() < bucket_size) {
+                bucket.addBlock(Block());
+            }
+
+            // Write the bucket back to storage
+            storage->WriteBucket(pathIndex, bucket);
+        }
+    }
+
+    // Remove evicted blocks from the stash
+    for (Block& block : blocks_to_evict) {
+        stash.erase(std::remove(stash.begin(), stash.end(), block), stash.end());
+    }
+}
+
+// Existing helper functions (unchanged)
+int* OramReadPathEviction::getPositionMap() {
+    return this->position_map;
+}
+
+vector<Block> OramReadPathEviction::getStash() {
+    return this->stash;
+}
+
+int OramReadPathEviction::getStashSize() {
+    return (this->stash).size();
+}
+
+int OramReadPathEviction::getNumLeaves() {
+    return this->num_leaves;
+}
+
+int OramReadPathEviction::getNumLevels() {
+    return this->num_levels;
+}
+
+int OramReadPathEviction::getNumBlocks() {
+    return this->num_blocks;
+}
+
+int OramReadPathEviction::getNumBuckets() {
+    return this->num_buckets;
 }
