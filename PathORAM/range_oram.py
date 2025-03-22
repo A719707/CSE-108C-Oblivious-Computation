@@ -16,7 +16,7 @@ class RangeORAM(Client):
         self.eviction_rate = int(math.sqrt(numBlocks))  # k
         self.access_counter = 0
         self.range_cache = {}  
-        self.dirty_blocks = set() 
+        self.blocks = set() 
         
     def ReadRange(self, start_addr: int, end_addr: int) -> List[Tuple[int, int]]:
 
@@ -44,14 +44,14 @@ class RangeORAM(Client):
         return result
         
     def BatchEvict(self):
-        blocks_to_evict = list(self.dirty_blocks)[:self.eviction_rate]
+        blocks_to_evict = list(self.blocks)[:self.eviction_rate]
         
         for block_addr in blocks_to_evict:
             if block_addr in self.range_cache:
                 data = self.range_cache[block_addr]
                 self.access("w", block_addr, data)
                 del self.range_cache[block_addr]
-                self.dirty_blocks.remove(block_addr)
+                self.blocks.remove(block_addr)
                 
         self.access_counter = 0
         
@@ -63,7 +63,7 @@ class RangeORAM(Client):
             # Update cache if block is cached
             if addr in self.range_cache:
                 self.range_cache[addr] = data
-            self.dirty_blocks.add(addr)
+            self.blocks.add(addr)
             
         self.access_counter += 1
         if self.access_counter >= self.eviction_rate:
