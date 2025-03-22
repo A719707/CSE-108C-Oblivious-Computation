@@ -1,37 +1,48 @@
-//
-//
-//
 #include "Block.h"
 #include <iostream>
-#include <string>
-#include <sstream>
+#include <algorithm>
 
 using namespace std;
 
-Block::Block(){//dummy index
-    this->leaf_id = -1;
-    this->index = -1;
+// Default constructor
+Block::Block() : index(-1), leaf_id(-1), range_size(0) {
+    fill(data, data + BLOCK_SIZE, 0);
 }
 
-Block::Block(int leaf_id, int index, int data[])
-{
-    this->leaf_id = leaf_id;
-    this->index = index;
-   for (int i = 0; i < BLOCK_SIZE; i++){
-       this->data[i] = data[i];
-   }
+// Backward-compatible constructor
+Block::Block(int leaf_id, int index, int data[]) 
+    : index(index), leaf_id(leaf_id), range_size(0) {
+    copy(data, data + BLOCK_SIZE, this->data);
+    leaf_ids.push_back(leaf_id); // Initialize leaf_ids with leaf_id
 }
 
-Block::~Block()
-{
-    //dtor
+// New constructor for rORAM
+Block::Block(int index, const int data[], const vector<int>& leaf_ids, int range_size) 
+    : index(index), leaf_ids(leaf_ids), range_size(range_size) {
+    copy(data, data + BLOCK_SIZE, this->data);
+    if (!leaf_ids.empty()) {
+        leaf_id = leaf_ids[0]; // Initialize leaf_id for backward compatibility
+    }
 }
 
-void Block::printBlock(){
-	string data_holder = "";
-	for (int i = 0; i<BLOCK_SIZE; i++) {
-		data_holder += to_string(this->data[i]);
-		data_holder += " ";
-	}
-	cout << "index: " << to_string(this->index) << " leaf id: " << to_string(this->leaf_id) << " data: " << data_holder << endl;
+// Print function
+void Block::printBlock() const {
+    cout << "Block Index: " << index << endl;
+    cout << "Data: ";
+    for (int i = 0; i < BLOCK_SIZE; ++i) {
+        cout << data[i] << " ";
+    }
+    cout << endl;
+    cout << "Leaf ID: " << leaf_id << endl; // Backward-compatible print
+    cout << "Leaf IDs: ";
+    for (int id : leaf_ids) {
+        cout << id << " ";
+    }
+    cout << endl;
+    cout << "Range Size: " << range_size << endl;
+}
+
+// Destructor
+Block::~Block() {
+    // Destructor is trivial; no dynamic memory to clean up
 }
