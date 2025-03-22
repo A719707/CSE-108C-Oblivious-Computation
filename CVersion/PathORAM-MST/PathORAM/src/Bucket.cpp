@@ -65,6 +65,24 @@ bool Bucket::removeBlock(Block rm_blk) {
     return removed;
 }
 
+// Get all blocks in a range
+vector<Block> Bucket::getBlocksInRange(int start, int end) {
+    vector<Block> result;
+    for (Block b : blocks) {
+        if (b.getIndex() >= start && b.getIndex() < end) {
+            result.push_back(b);
+        }
+    }
+    return result;
+}
+
+// Perform batch eviction
+void Bucket::batchEvict(vector<Block>& evictedBlocks) {
+    for (Block b : evictedBlocks) {
+        this->addBlock(b);
+    }
+}
+
 // Return a shallow copy of the blocks in the bucket
 vector<Block> Bucket::getBlocks() {
     return this->blocks;
