@@ -1,75 +1,52 @@
-#ifndef ORAM_READ_PATH_EVICTION_H
-#define ORAM_READ_PATH_EVICTION_H
+#ifndef PORAM_ORAMREADPATHEVICTION_H
+#define PORAM_ORAMREADPATHEVICTION_H
 
-#include <iostream>
+#include "OramInterface.h"
+#include "RandForOramInterface.h"
+#include "UntrustedStorageInterface.h"
+#include <cmath>
 #include <vector>
-#include <memory>
 
-using namespace std;
-
-// Interface for untrusted storage
-class UntrustedStorageInterface {
+class OramReadPathEviction : public OramInterface {
 public:
-    virtual ~UntrustedStorageInterface() = default;
-    virtual void write(int address, const vector<int>& data) = 0;
-    virtual vector<int> read(int address) = 0;
-};
-
-// Concrete implementation of untrusted storage
-class UntrustedStorage : public UntrustedStorageInterface {
-public:
-    void write(int address, const vector<int>& data) override {
-        // Implementation of write to storage
-        cout << "Writing to address " << address << ": ";
-        for (int val : data) {
-            cout << val << " ";
-        }
-        cout << endl;
-    }
-
-    vector<int> read(int address) override {
-        // Implementation of read from storage
-        cout << "Reading from address " << address << endl;
-        return {10, 20}; // Dummy data for demonstration
-    }
-};
-
-// Interface for random number generation
-class RandForOramInterface {
-public:
-    virtual ~RandForOramInterface() = default;
-    virtual int getRandomLeaf() = 0;
-};
-
-// Concrete implementation of random number generation
-class RandForOram : public RandForOramInterface {
-public:
-    int getRandomLeaf() override {
-        // Implementation of random leaf generation
-        return rand() % 1024; // Dummy random leaf for demonstration
-    }
-};
-
-// ORAM class implementing read-path eviction
-class OramReadPathEviction {
-public:
-    enum Operation { READ, WRITE };
-
-    OramReadPathEviction(UntrustedStorageInterface* storage, RandForOramInterface* rand_gen, int bucketSize, int numBlocks);
-    ~OramReadPathEviction();
-
-    int* access(Operation op, int blockId, int* newData);
-
-private:
     UntrustedStorageInterface* storage;
     RandForOramInterface* rand_gen;
-    int bucketSize;
-    int numBlocks;
 
-    // Internal methods for ORAM operations
-    void writeBlock(int blockId, const vector<int>& data);
-    vector<int> readBlock(int blockId);
-    void evictPath(int leaf);
+    int bucket_size;
+    int num_levels;
+    int num_leaves;
+    int num_blocks;
+    int num_buckets;
+
+    int *position_map; // Array to store position map
+    std::vector<Block> stash;
+
+    // Constructor
+    OramReadPathEviction(UntrustedStorageInterface* storage,
+                         RandForOramInterface* rand_gen, 
+                         int bucket_size, 
+                         int num_blocks);
+
+    // Access function for single-block operations
+    int* access(Operation op, int blockIndex, int newdata[]) override;
+
+    // Helper function to compute bucket index for a given leaf and level
+    int P(int leaf, int level);
+
+    // Function to read a range of blocks
+    std::vector<Block> ReadRange(int start, int end);
+
+    // Function to perform batch evictions
+    void batchEvict(int batch_size);
+
+    // Getter functions
+    int* getPositionMap() override;
+    std::vector<Block> getStash() override;
+    int getStashSize() override;
+    int getNumLeaves() override;
+    int getNumLevels() override;
+    int getNumBlocks() override;
+    int getNumBuckets() override;
 };
 
-#endif // ORAM_READ_PATH_EVICTION_H
+#endif // PORAM_ORAMREADPATHEVICTION_H
