@@ -1,18 +1,19 @@
 
+#ifndef CORRECTNESSTESTER1_H
+#define CORRECTNESSTESTER1_H
 
 #include "OramInterface.h"
-#include "OramReadPathEviction.h"
-#include "UntrustedStorageInterface.h"
-#include "ServerStorage.h"
-
-#include <vector>
-
+#include "rORAM.h"
+#include <string>
 
 class CorrectnessTester1 {
-	public:
+public:
+    CorrectnessTester1();
+    void runCorrectnessTest();
+    void runRORAMCorrectnessTest(); // New function for testing rORAM
 
-		CorrectnessTester1();
-		int* sampleData(int i);
-		void runCorrectnessTest();
-
+private:
+    int* sampleData(int i); // Helper function to generate sample data
 };
+
+#endif // CORRECTNESSTESTER1_H
