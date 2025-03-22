@@ -52,6 +52,8 @@ class RangeORAM(Client):
                 self.access("w", block_addr, data)
                 del self.range_cache[block_addr]
                 self.blocks.remove(block_addr)
+
+    self.access_counter = 0
         
     def Access(self, addr: int, op: str, data: Optional[int] = None) -> int:
 
