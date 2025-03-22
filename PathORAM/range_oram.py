@@ -52,8 +52,6 @@ class RangeORAM(Client):
                 self.access("w", block_addr, data)
                 del self.range_cache[block_addr]
                 self.blocks.remove(block_addr)
-
-    self.access_counter = 0
         
     def Access(self, addr: int, op: str, data: Optional[int] = None) -> int:
 
@@ -65,7 +63,6 @@ class RangeORAM(Client):
                 self.range_cache[addr] = data
             self.blocks.add(addr)
             
-        self.access_counter += 1
         if self.access_counter >= self.eviction_rate:
             self.BatchEvict()
             
