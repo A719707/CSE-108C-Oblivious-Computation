@@ -152,45 +152,46 @@ class Client:
         
         return False
 
-numBlocks = 10
-bucketSize = 4
+if __name__ == "__main__":
+    numBlocks = 2**10
+    bucketSize = 4
 
-height = int(math.log2(numBlocks)) + 1
+    height = int(math.log2(numBlocks)) + 1
 
-localClient = Client(numBlocks, bucketSize)
+    localClient = Client(numBlocks, bucketSize)
 
-server = Server(height, bucketSize)
-localClient.connectServer(server)
+    server = Server(height, bucketSize)
+    localClient.connectServer(server)
 
-localClient.initializeTree()
+    localClient.initializeTree()
 
-while(1):
-    op = "None"
-    print("------------------------------------------------------")
-    # localClient.printPositions()
-    while(op != "w" and op != "r" and op != "q"):
-        op = input("Read (r) or Write (w) or Quit (q): ")
-    
-    if op == "q":
-        break
+    while(1):
+        op = "None"
+        print("------------------------------------------------------")
+        # localClient.printPositions()
+        while(op != "w" and op != "r" and op != "q"):
+            op = input("Read (r) or Write (w) or Quit (q): ")
+        
+        if op == "q":
+            break
 
-    userBlock = -1
-    while(userBlock < 0 or userBlock > numBlocks):
-        try:
-            userBlock = int(input(f"Which block do you want to access (0 - {numBlocks - 1}): "))
-            if (userBlock < 0 or userBlock > numBlocks):
-                print(f"Choose a block inside the range (0 - {numBlocks - 1})")
-        except ValueError:
-            print("Invalid Integer")
-
-    if op == "w":
-        userNewData = None
-        while(userNewData == None):
+        userBlock = -1
+        while(userBlock < 0 or userBlock > numBlocks):
             try:
-                userNewData = int(input(f"New int Data for {userBlock}: "))
+                userBlock = int(input(f"Which block do you want to access (0 - {numBlocks - 1}): "))
+                if (userBlock < 0 or userBlock > numBlocks):
+                    print(f"Choose a block inside the range (0 - {numBlocks - 1})")
             except ValueError:
-                print("invalid Integer")
-        localClient.access(op, userBlock, userNewData)
-    
-    if op == "r":
-        print(localClient.access(op, userBlock))
+                print("Invalid Integer")
+
+        if op == "w":
+            userNewData = None
+            while(userNewData == None):
+                try:
+                    userNewData = int(input(f"New int Data for {userBlock}: "))
+                except ValueError:
+                    print("invalid Integer")
+            localClient.access(op, userBlock, userNewData)
+        
+        if op == "r":
+            print(localClient.access(op, userBlock))
