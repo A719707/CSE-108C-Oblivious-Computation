@@ -67,16 +67,6 @@ def test_range_queries():
         result = roram.ReadRange(start, end)
         print(f"Range query result: {result}")
 
-def interactive_test():
-    print("\nTesting")
-    num_blocks = int(input("Enter number of blocks (e.g., 16): "))
-    bucket_size = int(input("Enter bucket size (e.g., 4): "))
-    range_size = int(input("Enter range size (e.g., 4): "))
-
-    roram = RangeORAM(numBlocks=num_blocks, bucketSize=bucket_size, range_size=range_size)
-    server = Server(roram.height, roram.bucketSize)
-    roram.connectServer(server)
-    roram.initializeTree()
 
     while True:
         print("\nOps:")
